@@ -21,7 +21,6 @@ class Amiibo {
     required this.type,
   });
 
-  // Factory method untuk mengubah JSON Map menjadi Object Amiibo
   factory Amiibo.fromJson(Map<String, dynamic> json) {
     return Amiibo(
       amiiboSeries: json['amiiboSeries'] ?? '',

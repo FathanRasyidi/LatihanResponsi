@@ -57,4 +57,34 @@ class FavoriteAmiibo extends HiveObject {
       type: amiibo.type,
     );
   }
+
+  Amiibo toAmiibo() {
+    Map<String, dynamic> releaseMap = {};
+    try {
+      String cleanRelease = release.replaceAll('{', '').replaceAll('}', '').trim();
+      if (cleanRelease.isNotEmpty) {
+        List<String> pairs = cleanRelease.split(', ');
+        for (String pair in pairs) {
+          List<String> keyValue = pair.split(': ');
+          if (keyValue.length == 2) {
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+            releaseMap[key] = value;
+          }
+        }
+      }
+    } catch (e) {
+    }
+    return Amiibo(
+      amiiboSeries: amiiboSeries,
+      character: character,
+      gameSeries: gameSeries,
+      head: head,
+      image: image,
+      name: name,
+      release: releaseMap,
+      tail: tail,
+      type: type,
+    );
+  }
 }
