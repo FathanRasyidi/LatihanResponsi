@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latres/controller/bottom_nav_controller.dart';
 import 'package:latres/screen/favorite.dart';
+import 'package:latres/screen/detail_page.dart'; // Tambahkan import
 import '../service/api_service.dart';
 import '../model/amiibo_model.dart';
+import '../model/favorite_amiibo.dart'; // Tambahkan import
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -64,48 +67,63 @@ class HomePage extends StatelessWidget {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final amiibo = items[index];
-              return Card(
-              margin: EdgeInsets.only(bottom: 12),
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.black26,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade100,
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+              return ValueListenableBuilder(
+                valueListenable: Hive.box<FavoriteAmiibo>('favorites').listenable(),
+                builder: (context, Box<FavoriteAmiibo> box, _) {
+                  final isFavorite = box.values.any((fav) => fav.name == amiibo.name);
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: SizedBox(
-                    width: 56,
-                    height: 56,
-                    child: Image.network(
-                      amiibo.image,
-                      fit: BoxFit.cover,
-                      
-                      errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.black26,
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade100,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: Image.network(
+                            amiibo.image,
+                            fit: BoxFit.cover,
+                            
+                            errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported),
+                          ),
+                        ),
+                        title: Text(amiibo.name.isNotEmpty ? amiibo.name : amiibo.character),
+                        subtitle: Text("Game Series : ${amiibo.gameSeries}"),
+                        trailing: IconButton(
+                          onPressed: () {
+                            final box = Hive.box<FavoriteAmiibo>('favorites');
+                            if (isFavorite) {
+                              box.deleteAt(box.values.toList().indexWhere((fav) => fav.name == amiibo.name));
+                            } else {
+                              box.add(FavoriteAmiibo.fromAmiibo(amiibo));
+                            }
+                          },
+                          icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_outline, color: isFavorite ? Colors.red : null),
+                        ),
+                        onTap: () {
+                          Get.to(() => DetailPage(amiibo: amiibo));
+                        },
+                      ),
                     ),
-                  ),
-                  title: Text(amiibo.name.isNotEmpty ? amiibo.name : amiibo.character),
-                  subtitle: Text("Game Series : ${amiibo.gameSeries}"),
-                  trailing: IconButton(onPressed: () {}, icon: Icon(Icons.favorite_outline)),
-                  onTap: () {
-                    // navigate to FavoritePage with the tapped index as example
-                    Get.to(() => FavoritePage(gameId: index));
-                  },
-                ),
-              )
+                  );
+                },
               );
             },
           ),
